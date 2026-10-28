@@ -9,8 +9,7 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        // La app arranca en la pantalla de login.
-        // Al ingresar correctamente, el login cambia la pantalla al formulario (AppShell).
+        // la app arranca primero en el login
         return new Window(new LoginPage());
     }
 }

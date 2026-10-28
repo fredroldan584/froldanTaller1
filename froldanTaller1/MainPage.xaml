@@ -5,17 +5,14 @@
              Title="Taller Semana 1">
 
     <ScrollView>
-        <!-- Contenedor adaptable: en pantallas grandes se limita el ancho y se centra -->
         <VerticalStackLayout x:Name="contenedor" Padding="20" Spacing="10" HorizontalOptions="Center">
 
-            <!-- Encabezado (igual al ejemplo de la clase) -->
             <Label Text="Taller Semana 1" TextColor="Red" FontSize="24" HorizontalOptions="Center" />
             <Label Text="Formulario de inscripción:" TextColor="DodgerBlue" FontSize="20" Margin="0,10,0,0" />
             <Image Source="uisrael.png" HeightRequest="110" HorizontalOptions="Center" />
 
             <Label Text="Datos Personales" FontSize="18" FontAttributes="Bold" Margin="0,10,0,0" />
 
-            <!-- Identificación: Cédula / RUC / Pasaporte -->
             <Label Text="Identificación:" />
             <Picker x:Name="pkTipoId" Title="Seleccione: Cédula / RUC / Pasaporte"
                     SelectedIndexChanged="pkTipoId_SelectedIndexChanged">
@@ -30,7 +27,6 @@
             <Entry x:Name="txtIdentificacion" Placeholder="Identificación: Cédula/RUC/Pasaporte"
                    TextChanged="txtIdentificacion_TextChanged" />
 
-            <!-- Apellidos -->
             <Label Text="Apellidos:" />
             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                 <Entry x:Name="txtApellidoPaterno" Placeholder="Apellido paterno"
@@ -39,12 +35,10 @@
                        TextChanged="SoloLetras_TextChanged" />
             </Grid>
 
-            <!-- Nombres -->
             <Label Text="Nombres completos:" />
             <Entry x:Name="txtNombres" Placeholder="Nombres completos"
                    TextChanged="SoloLetras_TextChanged" />
 
-            <!-- Género -->
             <Label Text="Género:" />
             <Picker x:Name="pkGenero" Title="Seleccione">
                 <Picker.ItemsSource>
@@ -56,11 +50,9 @@
                 </Picker.ItemsSource>
             </Picker>
 
-            <!-- Fecha de nacimiento -->
             <Label Text="Fecha nacimiento:" />
             <DatePicker x:Name="dpFechaNacimiento" Format="dd/MM/yyyy" />
 
-            <!-- Estado civil -->
             <Label Text="Estado civil:" />
             <Picker x:Name="pkEstadoCivil" Title="Seleccione">
                 <Picker.ItemsSource>
@@ -74,19 +66,16 @@
                 </Picker.ItemsSource>
             </Picker>
 
-            <!-- Teléfono -->
             <Label Text="Teléfono personal:" />
             <Entry x:Name="txtTelefono" Placeholder="09XXXXXXXX" Keyboard="Telephone"
                    MaxLength="10" TextChanged="SoloNumeros_TextChanged" />
 
-            <!-- Correos -->
             <Label Text="Correo personal:" />
             <Entry x:Name="txtCorreo" Placeholder="correo@ejemplo.com" Keyboard="Email" />
 
             <Label Text="Confirmar correo:" />
             <Entry x:Name="txtConfirmarCorreo" Placeholder="Repita su correo" Keyboard="Email" />
 
-            <!-- Datos académicos -->
             <Label Text="Carrera:" />
             <Picker x:Name="pkCarrera" Title="Seleccione la carrera">
                 <Picker.ItemsSource>
@@ -126,7 +115,6 @@
                 </Picker.ItemsSource>
             </Picker>
 
-            <!-- Botones -->
             <Button x:Name="btnGuardar" Text="GUARDAR DATOS" Margin="0,15,0,0"
                     BackgroundColor="#512BD4" TextColor="White"
                     Clicked="btnGuardar_Clicked" />

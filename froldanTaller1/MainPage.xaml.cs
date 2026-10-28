@@ -1,27 +1,21 @@
-using System.Text;
-using System.Text.RegularExpressions;
-
 namespace froldanTaller1;
 
 public partial class MainPage : ContentPage
 {
-    // Archivo TXT donde se guardan todas las inscripciones.
-    // En Windows queda en la carpeta Documentos; en Android, en la carpeta de datos de la app.
-    private readonly string rutaArchivo = Path.Combine(
-        DeviceInfo.Platform == DevicePlatform.WinUI
-            ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-            : FileSystem.AppDataDirectory,
+    // ruta del archivo txt donde se guardan las inscripciones (en Documentos)
+    string rutaArchivo = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
         "froldanTaller1_inscripciones.txt");
 
     public MainPage()
     {
         InitializeComponent();
-        // No se permite elegir una fecha de nacimiento futura
+        // para que no se pueda escoger una fecha de nacimiento futura
         dpFechaNacimiento.MaximumDate = DateTime.Today;
     }
 
-    // ===== INTERFAZ ADAPTABLE =====
-    // En celular ocupa todo el ancho; en pantallas grandes se limita a 700 px y se centra.
+    // hace que el formulario se adapte: en el celular usa todo el ancho
+    // y en una pantalla grande no pasa de 700 px
     protected override void OnSizeAllocated(double width, double height)
     {
         base.OnSizeAllocated(width, height);
@@ -29,99 +23,121 @@ public partial class MainPage : ContentPage
             contenedor.WidthRequest = Math.Min(width, 700);
     }
 
-    // ===== VALIDACIÓN 1: SOLO LETRAS (permite tildes, ñ y espacios) =====
+    // validacion solo letras: si se escribe un numero o simbolo se regresa al texto anterior
     private void SoloLetras_TextChanged(object sender, TextChangedEventArgs e)
     {
-        var entry = (Entry)sender;
-        string limpio = Regex.Replace(e.NewTextValue ?? "", @"[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ ]", "");
-        if (limpio != e.NewTextValue)
-            entry.Text = limpio;
+        Entry entry = (Entry)sender;
+        string texto = e.NewTextValue ?? "";
+
+        foreach (char c in texto)
+        {
+            if (!char.IsLetter(c) && c != ' ')
+            {
+                entry.Text = e.OldTextValue;
+                return;
+            }
+        }
     }
 
-    // ===== VALIDACIÓN 2: SOLO NÚMEROS =====
+    // validacion solo numeros (telefono)
     private void SoloNumeros_TextChanged(object sender, TextChangedEventArgs e)
     {
-        var entry = (Entry)sender;
-        string limpio = Regex.Replace(e.NewTextValue ?? "", @"[^0-9]", "");
-        if (limpio != e.NewTextValue)
-            entry.Text = limpio;
+        Entry entry = (Entry)sender;
+        string texto = e.NewTextValue ?? "";
+
+        foreach (char c in texto)
+        {
+            if (!char.IsDigit(c))
+            {
+                entry.Text = e.OldTextValue;
+                return;
+            }
+        }
     }
 
-    // Ajusta las reglas del campo según el tipo de identificación
+    // segun lo que se escoja en el picker cambia el limite de digitos y el teclado
     private void pkTipoId_SelectedIndexChanged(object sender, EventArgs e)
     {
         txtIdentificacion.Text = "";
-        switch (pkTipoId.SelectedItem?.ToString())
-        {
-            case "CÉDULA":
-                txtIdentificacion.Keyboard = Keyboard.Numeric;
-                txtIdentificacion.MaxLength = 10;
-                txtIdentificacion.Placeholder = "Cédula (10 dígitos)";
-                break;
-            case "RUC":
-                txtIdentificacion.Keyboard = Keyboard.Numeric;
-                txtIdentificacion.MaxLength = 13;
-                txtIdentificacion.Placeholder = "RUC (13 dígitos, termina en 001)";
-                break;
-            default:
-                txtIdentificacion.Keyboard = Keyboard.Default;
-                txtIdentificacion.MaxLength = 20;
-                txtIdentificacion.Placeholder = "Pasaporte (letras y números)";
-                break;
-        }
-    }
-
-    // Cédula y RUC: solo números. Pasaporte: letras y números.
-    private void txtIdentificacion_TextChanged(object sender, TextChangedEventArgs e)
-    {
         string tipo = pkTipoId.SelectedItem?.ToString() ?? "";
-        if (tipo == "CÉDULA" || tipo == "RUC")
+
+        if (tipo == "CÉDULA")
         {
-            SoloNumeros_TextChanged(sender, e);
+            txtIdentificacion.Keyboard = Keyboard.Numeric;
+            txtIdentificacion.MaxLength = 10;
+            txtIdentificacion.Placeholder = "Cédula (10 dígitos)";
+        }
+        else if (tipo == "RUC")
+        {
+            txtIdentificacion.Keyboard = Keyboard.Numeric;
+            txtIdentificacion.MaxLength = 13;
+            txtIdentificacion.Placeholder = "RUC (13 dígitos, termina en 001)";
         }
         else
         {
-            string limpio = Regex.Replace(e.NewTextValue ?? "", @"[^a-zA-Z0-9]", "").ToUpper();
-            if (limpio != e.NewTextValue)
-                txtIdentificacion.Text = limpio;
+            txtIdentificacion.Keyboard = Keyboard.Default;
+            txtIdentificacion.MaxLength = 20;
+            txtIdentificacion.Placeholder = "Pasaporte (letras y números)";
         }
     }
 
-    // ===== BOTÓN GUARDAR DATOS (VALIDACIÓN 4: enviar todo a un archivo TXT) =====
+    // cedula y ruc solo aceptan numeros, el pasaporte acepta letras y numeros
+    private void txtIdentificacion_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        string tipo = pkTipoId.SelectedItem?.ToString() ?? "";
+        string texto = e.NewTextValue ?? "";
+
+        foreach (char c in texto)
+        {
+            bool permitido;
+            if (tipo == "CÉDULA" || tipo == "RUC")
+                permitido = char.IsDigit(c);
+            else
+                permitido = char.IsLetterOrDigit(c);
+
+            if (!permitido)
+            {
+                txtIdentificacion.Text = e.OldTextValue;
+                return;
+            }
+        }
+    }
+
+    // boton GUARDAR DATOS: primero valida todo y si esta bien lo guarda en el txt
     private async void btnGuardar_Clicked(object sender, EventArgs e)
     {
-        string? error = Validar();
-        if (error != null)
+        string error = Validar();
+        if (error != "")
         {
             await DisplayAlertAsync("Validación", error, "OK");
             return;
         }
 
+        // armo el texto con todos los datos del formulario
+        string datos =
+            "========== INSCRIPCIÓN UISRAEL ==========\n" +
+            "Fecha de registro: " + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + "\n" +
+            "Tipo de identificación: " + pkTipoId.SelectedItem + "\n" +
+            "Identificación: " + txtIdentificacion.Text + "\n" +
+            "Apellidos: " + txtApellidoPaterno.Text + " " + txtApellidoMaterno.Text + "\n" +
+            "Nombres: " + txtNombres.Text + "\n" +
+            "Género: " + pkGenero.SelectedItem + "\n" +
+            "Fecha de nacimiento: " + dpFechaNacimiento.Date?.ToString("dd/MM/yyyy") + "\n" +
+            "Estado civil: " + pkEstadoCivil.SelectedItem + "\n" +
+            "Teléfono: " + txtTelefono.Text + "\n" +
+            "Correo: " + txtCorreo.Text.Trim() + "\n" +
+            "Carrera: " + pkCarrera.SelectedItem + "\n" +
+            "Modalidad: " + pkModalidad.SelectedItem + "\n" +
+            "Campus: " + pkCampus.SelectedItem + "\n\n";
+
         try
         {
-            var sb = new StringBuilder();
-            sb.AppendLine("========== INSCRIPCIÓN UISRAEL ==========");
-            sb.AppendLine($"Fecha de registro: {DateTime.Now:dd/MM/yyyy HH:mm:ss}");
-            sb.AppendLine($"Tipo de identificación: {pkTipoId.SelectedItem}");
-            sb.AppendLine($"Identificación: {txtIdentificacion.Text}");
-            sb.AppendLine($"Apellidos: {txtApellidoPaterno.Text} {txtApellidoMaterno.Text}");
-            sb.AppendLine($"Nombres: {txtNombres.Text}");
-            sb.AppendLine($"Género: {pkGenero.SelectedItem}");
-            sb.AppendLine($"Fecha de nacimiento: {dpFechaNacimiento.Date:dd/MM/yyyy}");
-            sb.AppendLine($"Estado civil: {pkEstadoCivil.SelectedItem}");
-            sb.AppendLine($"Teléfono: {txtTelefono.Text}");
-            sb.AppendLine($"Correo: {txtCorreo.Text?.Trim()}");
-            sb.AppendLine($"Carrera: {pkCarrera.SelectedItem}");
-            sb.AppendLine($"Modalidad: {pkModalidad.SelectedItem}");
-            sb.AppendLine($"Campus: {pkCampus.SelectedItem}");
-            sb.AppendLine();
-
-            // Agrega el registro al final del archivo (no borra los anteriores)
-            await File.AppendAllTextAsync(rutaArchivo, sb.ToString());
+            // AppendAllText agrega al final del archivo, asi no se borran los registros anteriores
+            File.AppendAllText(rutaArchivo, datos);
 
             await DisplayAlertAsync("Datos guardados",
-                $"La inscripción de {txtNombres.Text} {txtApellidoPaterno.Text} se guardó en:\n{rutaArchivo}",
-                "OK");
+                "La inscripción de " + txtNombres.Text + " " + txtApellidoPaterno.Text +
+                " se guardó en:\n" + rutaArchivo, "OK");
 
             LimpiarFormulario();
         }
@@ -131,7 +147,7 @@ public partial class MainPage : ContentPage
         }
     }
 
-    // Abre el archivo TXT con el programa predeterminado (Bloc de notas en Windows)
+    // abre el txt con el bloc de notas para ver lo que se guardo
     private async void btnVerArchivo_Clicked(object sender, EventArgs e)
     {
         if (!File.Exists(rutaArchivo))
@@ -139,39 +155,41 @@ public partial class MainPage : ContentPage
             await DisplayAlertAsync("Archivo", "Todavía no hay inscripciones guardadas.", "OK");
             return;
         }
+
         await Launcher.Default.OpenAsync(new OpenFileRequest("Inscripciones", new ReadOnlyFile(rutaArchivo)));
     }
 
-    // Revisa todos los campos. Devuelve el mensaje de error o null si todo está bien.
-    private string? Validar()
+    // revisa todos los campos uno por uno
+    // si algo esta mal devuelve el mensaje de error, si todo esta bien devuelve vacio
+    private string Validar()
     {
-        if (pkTipoId.SelectedIndex == -1)
+        string tipo = pkTipoId.SelectedItem?.ToString() ?? "";
+        string id = txtIdentificacion.Text ?? "";
+
+        if (tipo == "")
             return "Seleccione el tipo de identificación.";
 
-        string id = txtIdentificacion.Text ?? "";
-        string tipo = pkTipoId.SelectedItem?.ToString() ?? "";
-
-        if (string.IsNullOrWhiteSpace(id))
+        if (id == "")
             return "Ingrese su número de identificación.";
 
         if (tipo == "CÉDULA")
         {
-            if (!Regex.IsMatch(id, @"^\d{10}$"))
+            if (id.Length != 10)
                 return "La cédula debe tener exactamente 10 números.";
             if (!CedulaValida(id))
                 return "La cédula ingresada no es válida.";
         }
-        else if (tipo == "RUC")
+
+        if (tipo == "RUC")
         {
-            if (!Regex.IsMatch(id, @"^\d{13}$"))
+            if (id.Length != 13)
                 return "El RUC debe tener exactamente 13 números.";
             if (!id.EndsWith("001"))
                 return "El RUC debe terminar en 001.";
         }
-        else if (!Regex.IsMatch(id, @"^[A-Z0-9]{5,20}$"))
-        {
+
+        if (tipo == "PASAPORTE" && (id.Length < 5 || id.Length > 20))
             return "El pasaporte debe tener entre 5 y 20 letras o números.";
-        }
 
         if (string.IsNullOrWhiteSpace(txtApellidoPaterno.Text) || string.IsNullOrWhiteSpace(txtApellidoMaterno.Text))
             return "Ingrese ambos apellidos.";
@@ -185,47 +203,62 @@ public partial class MainPage : ContentPage
         if (pkEstadoCivil.SelectedIndex == -1)
             return "Seleccione su estado civil.";
 
-        if (!Regex.IsMatch(txtTelefono.Text ?? "", @"^\d{10}$"))
+        if ((txtTelefono.Text ?? "").Length != 10)
             return "El teléfono debe tener 10 números.";
 
         string correo = (txtCorreo.Text ?? "").Trim();
         string confirmar = (txtConfirmarCorreo.Text ?? "").Trim();
 
-        if (!Regex.IsMatch(correo, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+        if (!correo.Contains("@") || !correo.Contains("."))
             return "Ingrese un correo válido.";
 
-        // ===== VALIDACIÓN 3: QUE COINCIDAN LOS CORREOS =====
-        if (!string.Equals(correo, confirmar, StringComparison.OrdinalIgnoreCase))
+        // validacion de que los dos correos sean iguales
+        if (correo.ToLower() != confirmar.ToLower())
             return "Los correos no coinciden.";
 
         if (pkCarrera.SelectedIndex == -1 || pkModalidad.SelectedIndex == -1 || pkCampus.SelectedIndex == -1)
             return "Seleccione carrera, modalidad y campus.";
 
-        return null;
+        return "";
     }
 
-    // Validación de cédula ecuatoriana (algoritmo módulo 10)
-    private static bool CedulaValida(string cedula)
+    // valida que la cedula sea real con el algoritmo del modulo 10
+    // los 2 primeros digitos son la provincia y el ultimo es el digito verificador
+    private bool CedulaValida(string cedula)
     {
         int provincia = int.Parse(cedula.Substring(0, 2));
-        if (provincia < 1 || (provincia > 24 && provincia != 30)) return false;
-        if (cedula[2] - '0' > 5) return false;
+        if (provincia < 1 || (provincia > 24 && provincia != 30))
+            return false;
+
+        int tercerDigito = int.Parse(cedula.Substring(2, 1));
+        if (tercerDigito > 5)
+            return false;
 
         int suma = 0;
         for (int i = 0; i < 9; i++)
         {
-            int digito = cedula[i] - '0';
+            int digito = int.Parse(cedula.Substring(i, 1));
+
+            // los digitos en posicion par se multiplican por 2 y si pasan de 9 se les resta 9
             if (i % 2 == 0)
             {
-                digito *= 2;
-                if (digito > 9) digito -= 9;
+                digito = digito * 2;
+                if (digito > 9)
+                    digito = digito - 9;
             }
-            suma += digito;
+
+            suma = suma + digito;
         }
-        int verificador = (10 - (suma % 10)) % 10;
-        return verificador == cedula[9] - '0';
+
+        int verificador = 10 - (suma % 10);
+        if (verificador == 10)
+            verificador = 0;
+
+        int ultimoDigito = int.Parse(cedula.Substring(9, 1));
+        return verificador == ultimoDigito;
     }
 
+    // deja el formulario vacio despues de guardar
     private void LimpiarFormulario()
     {
         pkTipoId.SelectedIndex = -1;

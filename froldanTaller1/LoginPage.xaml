@@ -10,7 +10,7 @@
 
             <Label Text="Taller Semana 1" TextColor="Red" FontSize="24" HorizontalOptions="Center" />
             <Image Source="uisrael.png" HeightRequest="120" HorizontalOptions="Center" />
-            <Label Text="Inicio de sesión" TextColor="Blue" FontSize="20" HorizontalOptions="Center" />
+            <Label Text="Inicio de sesión" TextColor="DodgerBlue" FontSize="20" HorizontalOptions="Center" />
 
             <Label Text="Usuario:" />
             <Entry x:Name="txtUsuario" Placeholder="Ingrese su usuario" />
