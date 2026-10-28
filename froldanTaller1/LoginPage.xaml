@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="froldanTaller1.LoginPage"
+             Title="Inicio de sesión">
+
+    <ScrollView>
+        <VerticalStackLayout x:Name="contenedor" Padding="30" Spacing="12"
+                             HorizontalOptions="Center" VerticalOptions="Center">
+
+            <Label Text="Taller Semana 1" TextColor="Red" FontSize="24" HorizontalOptions="Center" />
+            <Image Source="uisrael.png" HeightRequest="120" HorizontalOptions="Center" />
+            <Label Text="Inicio de sesión" TextColor="Blue" FontSize="20" HorizontalOptions="Center" />
+
+            <Label Text="Usuario:" />
+            <Entry x:Name="txtUsuario" Placeholder="Ingrese su usuario" />
+
+            <Label Text="Contraseña:" />
+            <Entry x:Name="txtClave" Placeholder="Ingrese su contraseña" IsPassword="True" />
+
+            <Button x:Name="btnIngresar" Text="INGRESAR" Margin="0,10,0,0"
+                    BackgroundColor="#512BD4" TextColor="White"
+                    Clicked="btnIngresar_Clicked" />
+
+            <Label x:Name="lblMensaje" TextColor="Red" HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
